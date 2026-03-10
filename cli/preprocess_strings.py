@@ -7,6 +7,10 @@ from nltk.stem import PorterStemmer
 stemmer = PorterStemmer()
 stopwords = load_stopwords()
 
+def test_stem(one, two):
+    print(stemmer.stem(one))
+    print(stemmer.stem(two))
+
 def preprocess(input: str) -> list[str]:
     input = input.lower()
 
