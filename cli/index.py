@@ -1,8 +1,10 @@
 import pickle
+import math
 from collections import defaultdict, Counter
 
 from pathlib import Path
 
+from constants import BM25_K1
 from load_data import load_movies
 from preprocess_strings import preprocess
 
@@ -31,10 +33,24 @@ class InvertedIndex:
         t = preprocess(term)
         if len(t) != 1:
             raise TypeError("get_tf() takes 1 term")
-        return self.term_frequencies[doc_id][term]
+        return self.term_frequencies[doc_id][t[0]]
     
     def get_tokens(self, doc_id: int):
         return preprocess(f"{self.tmap[doc_id]} {self.docmap[doc_id]}")
+    
+
+    def get_bm25_idf(self, term: str) -> float:
+        n = len(self.tmap)
+        df = len(self.get_documents(term))
+        bm25idf = math.log((n - df + 0.5) / (df + 0.5) + 1)
+
+        return bm25idf
+    
+    def get_bm25_tf(self, doc_id, term, k1=BM25_K1) -> float:
+        tf = self.get_tf(doc_id, term)
+        bm25tf = (tf * (k1 + 1)) / (tf + k1)
+
+        return bm25tf
     
     def build(self):
         movies = load_movies()
