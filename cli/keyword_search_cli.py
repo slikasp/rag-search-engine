@@ -3,8 +3,9 @@
 import argparse
 import math
 
-from constants import BM25_K1
-from index import InvertedIndex
+from lib.constants import BM25_K1, BM25_B
+from lib.commands import search_command, build_command, tf_command, idf_command, tfidf_command, bm25idf_command, mb25tf_command, bm25search_command
+from lib.keyword_search import InvertedIndex
 
 
 def title_search(movies: InvertedIndex, query: str) -> list[int]:
@@ -51,70 +52,38 @@ def main() -> None:
     bm25_tf_parser.add_argument("id", type=int, help="Document ID")
     bm25_tf_parser.add_argument("term", type=str, help="Term to get BM25 TF score for")
     bm25_tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
+    bm25_tf_parser.add_argument("b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 b parameter")
+
+    bm25search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
+    bm25search_parser.add_argument("query", type=str, help="Search query")
+    bm25search_parser.add_argument("limit", type=int, nargs='?', default=5, help="Number of titles to return")
 
     token_parser = subparsers.add_parser("test_token", help="test stems")
     token_parser.add_argument("id", type=int, help="id to check")
 
     args = parser.parse_args()
 
-    movies = InvertedIndex()
-
-    # TODO: put all logic to separate command functions
     match args.command:
         case "search":
-            try:
-                movies.load()
-            except Exception as e:
-                print(e)
-            print(f"Index loaded. Searching for: {args.query}")
-            results = title_search(movies, args.query)
-            for id in results:
-                print(f"{id}. {movies.tmap[id]}")
+            search_command(args.query)
         case "build":
-            print('Building...')
-            movies.build()
-            movies.save()
-            print('Build Complete!')
+            build_command()
         case "tf":
-            try:
-                movies.load()
-            except Exception as e:
-                print(e)
-            tf = movies.get_tf(args.id, args.term)
-            print(f"Term '{args.term}' appears {tf} times in '{args.id}' ({movies.tmap[args.id]}) ")
+            tf_command(args.id, args.term)
         case "idf":
-            try:
-                movies.load()
-            except Exception as e:
-                print(e)
-            total_doc_count = len(movies.tmap)
-            term_match_doc_count = len(movies.get_documents(args.term))
-            idf = math.log((total_doc_count + 1) / (term_match_doc_count + 1))
-            print(f"Inverse document frequency of '{args.term}': {idf:.2f}")
+            idf_command(args.term)
         case "tfidf":
-            try:
-                movies.load()
-            except Exception as e:
-                print(e)
-            tf_idf = calc_tfidf(movies, args.id, args.term)
-            print(f"TF-IDF score of '{args.term}' in document '{args.id}': {tf_idf:.2f}")
+            tfidf_command(args.id, args.term)
         case "bm25idf":
-            try:
-                movies.load()
-            except Exception as e:
-                print(e)
-            bm25idf = movies.get_bm25_idf(args.term)
-            print(f"BM25 IDF score of '{args.term}': {bm25idf:.2f}")
+            bm25idf_command(args.term)
         case "bm25tf":
-            try:
-                movies.load()
-            except Exception as e:
-                print(e)
-            bm25tf = movies.get_bm25_tf(args.id, args.term, args.k1)
-            print(f"BM25 TF score of '{args.term}' in document '{args.id}': {bm25tf:.2f}")
+            mb25tf_command(args.id, args.term, args.k1, args.b1)
+        case "bm25search":
+            bm25search_command(args.query, args.limit)
         case "test_token":
+            movies = InvertedIndex()
             movies.load()
-            print(movies.get_tokens(args.id))
+            print(movies.__get_tokens(args.id))
         case _:
             parser.print_help()
 

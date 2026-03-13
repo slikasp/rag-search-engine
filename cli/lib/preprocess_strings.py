@@ -1,6 +1,6 @@
 import string
 
-from load_data import load_stopwords
+from lib.load_data import load_stopwords
 
 from nltk.stem import PorterStemmer
 
