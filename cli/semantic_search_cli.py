@@ -2,6 +2,7 @@
 
 import argparse
 
+
 from lib.load_data import load_movies
 from lib.semantic_search import SemanticSearch, verify_model, embed_text, verify_embeddings, embed_query_text
 
@@ -23,8 +24,25 @@ def main():
     search_parser.add_argument("query", type=str, help="Movie to search for")
     search_parser.add_argument("--limit", type=int, nargs='?', default=5, help="Number of titles to return")
 
+    chunk_parser = subparsers.add_parser("chunk", help="Chunk text")
+    chunk_parser.add_argument("text", type=str, help="Text to chunk")
+    chunk_parser.add_argument("--chunk-size", type=int, nargs='?', default=200, help="Chunk character limit")
+    chunk_parser.add_argument("--overlap", type=int, nargs='?', default=0, help="How much overlap between chunks")
+
 
     args = parser.parse_args()
+
+    def chunk_command(text: str, size: int, overlap: int) -> list[str]:
+        if overlap < 0:
+            overlap = 0
+        words = text.split()
+        chunks = []
+        n = 0
+        while n < (len(words) - overlap):
+            chunk = words[n:n+size]
+            chunks.append(" ".join(chunk))
+            n += size - overlap
+        return chunks
 
     match args.command:
         case "search":
@@ -45,6 +63,13 @@ def main():
             verify_embeddings()
         case "embedquery":
             embed_query_text(args.query)
+        case "chunk":
+            chunks = chunk_command(args.text, args.chunk_size, args.overlap)
+            print(f"Chunking {len(args.text)} characters")
+            n = 1
+            for c in chunks:
+                print(f"{n}. {c}")
+                n += 1
         case _:
             parser.print_help()
 
