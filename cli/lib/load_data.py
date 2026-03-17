@@ -1,6 +1,6 @@
 import json
 
-def load_movies(path: str = "data/movies.json") -> dict:
+def load_movies(path: str = "data/movies.json") -> list[dict]:
     with open(path, 'r') as file:
         data = json.load(file)
     
