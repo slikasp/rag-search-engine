@@ -17,6 +17,8 @@ class InvertedIndex:
         self.doc_lengths = {}
         self.term_frequencies = defaultdict(Counter)
 
+        self.index_path = "cache/index.pkl"
+
     # INTERNAL
 
     def __add_document(self, doc_id: int, text: str):
@@ -88,7 +90,7 @@ class InvertedIndex:
 
     def save(self):
         Path("cache").mkdir(parents=True, exist_ok=True)
-        with open("cache/index.pkl", 'wb') as f_index:
+        with open(self.index_path, 'wb') as f_index:
             pickle.dump(self.index, f_index)
         with open("cache/tmap.pkl", 'wb') as f_tmap:
             pickle.dump(self.tmap, f_tmap)
@@ -102,7 +104,7 @@ class InvertedIndex:
 
     def load(self):
         try:
-            with open("cache/index.pkl", 'rb') as f_index:
+            with open(self.index_path, 'rb') as f_index:
                 self.index = pickle.load(f_index)
             with open("cache/tmap.pkl", 'rb') as f_tmap:
                 self.tmap = pickle.load(f_tmap)
