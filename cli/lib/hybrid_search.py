@@ -83,10 +83,10 @@ class HybridSearch:
         return top
 
     def rrf_search(self, query, k, limit=10):
-        bm25 = self._bm25_search(query, limit*500)
+        bm25 = self._bm25_search(query, limit*100)
         bm25_dict = dict(bm25)
         bm25_ranked = rank(bm25_dict)
-        css = self.semantic_search.search_chunks(query, limit*500)
+        css = self.semantic_search.search_chunks(query, limit*100)
         css_dict = {d['id']: d['score'] for d in css}
         css_ranked = rank(css_dict)
         ranks = {}
