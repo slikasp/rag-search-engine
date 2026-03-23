@@ -2,7 +2,7 @@ import argparse
 
 from lib.load_data import load_movies
 from sentence_transformers import CrossEncoder
-from test_gemini import enhance_spelling, enhance_rewrite, enhance_expand, rerank_individual, rerank_batch
+from test_gemini import enhance_spelling, enhance_rewrite, enhance_expand, rerank_individual, rerank_batch, evaluate
 from lib.hybrid_search import normalize, HybridSearch
 
 def normalize_command(scores: list):
@@ -25,6 +25,7 @@ def main() -> None:
     rrf_search_parser.add_argument("query", type=str, help="")
     rrf_search_parser.add_argument("--k", nargs='?', default=60, type=int, help="")
     rrf_search_parser.add_argument("--limit", nargs='?', default=5, type=int, help="")
+    rrf_search_parser.add_argument("--evaluate", action='store_true', help="")
     rrf_search_parser.add_argument("--enhance", type=str, choices=["spell", "rewrite", "expand"], help="Query enhancement method")
     rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual", "batch", "cross_encoder"], help="")
 
@@ -114,8 +115,7 @@ def main() -> None:
                         key=lambda item: item[1]['ces'],
                         reverse=True
                     )[:args.limit]
-
-                    
+                   
             # output
             n = 1
             for m in movies:
@@ -130,6 +130,14 @@ def main() -> None:
                 print(f"BM25: {m[1]['bm25']}, Semantic: {m[1]['semantic']}")
                 # print(f"{m[1]['document']:.100}")
                 n += 1
+            
+            if args.evaluate:
+                print("AI Evaluation:")
+                eval = evaluate(query, [m[1]['title']+":"+m[1]['document'] for m in movies])
+                n = 1
+                for m in movies:
+                    print(f"{n}. {m[1]['title']}: {eval[n-1]}/3")
+
         case _:
             parser.print_help() 
 

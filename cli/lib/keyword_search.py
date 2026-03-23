@@ -31,7 +31,14 @@ class InvertedIndex:
             self.term_frequencies[doc_id][t] += 1
     
     def __get_avg_doc_length(self) -> float:
-        return statistics.mean(self.doc_lengths.values()) if self.doc_lengths else 0.0
+        if hasattr(self, '_avg_doc_length_cache'):
+            return self._avg_doc_length_cache
+        if not self.doc_lengths:
+            return 0.0
+        result = sum(self.doc_lengths.values()) / len(self.doc_lengths)
+        self._avg_doc_length_cache = result
+        return result
+        # return statistics.mean(self.doc_lengths.values()) if self.doc_lengths else 0.0
 
     def __get_tokens(self, doc_id: int):
         return preprocess(f"{self.tmap[doc_id]} {self.docmap[doc_id]}")
@@ -67,7 +74,7 @@ class InvertedIndex:
         bm25_idf = self.get_bm25_idf(term)
         return bm25_tf * bm25_idf
     
-    def bm25_search(self, query, limit):
+    def bm25_search_old(self, query, limit):
         tokens = preprocess(query)
         scores = defaultdict(float)
         for id in self.tmap.keys():
@@ -76,6 +83,23 @@ class InvertedIndex:
                 bm25 += self.bm25(id, t)
             scores[id] = bm25
 
+        top_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:limit]
+        return top_scores
+    
+    def bm25_search(self, query, limit):
+        tokens = preprocess(query)
+        avg_dl = self.__get_avg_doc_length()
+        scores = defaultdict(float)
+
+        for token in tokens:
+            idf = self.get_bm25_idf(token)
+            for doc_id in self.index.get(token, set()):
+                tf = self.term_frequencies[doc_id][token]
+                doc_length = self.doc_lengths[doc_id]
+                length_norm = 1 - BM25_B + BM25_B * (doc_length / avg_dl)
+                bm25_tf = (tf * (BM25_K1 + 1)) / (tf + BM25_K1 * length_norm)
+                scores[doc_id] += bm25_tf * idf
+    
         top_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:limit]
         return top_scores
     

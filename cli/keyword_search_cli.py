@@ -77,7 +77,7 @@ def main() -> None:
         case "bm25idf":
             bm25idf_command(args.term)
         case "bm25tf":
-            mb25tf_command(args.id, args.term, args.k1, args.b1)
+            mb25tf_command(args.id, args.term, args.k1, args.b)
         case "bm25search":
             bm25search_command(args.query, args.limit)
         case "test_token":

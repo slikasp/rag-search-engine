@@ -11,3 +11,9 @@ def load_stopwords(path: str = "data/stopwords.txt") -> list[str]:
         words = f.read().splitlines()
 
     return words
+
+def load_golden(path: str = "data/golden_dataset.json") -> list[dict]:
+    with open(path, 'r') as file:
+        data = json.load(file)
+    
+    return data['test_cases']
