@@ -2,7 +2,7 @@ import argparse
 
 from lib.load_data import load_movies
 from sentence_transformers import CrossEncoder
-from test_gemini import enhance_spelling, enhance_rewrite, enhance_expand, rerank_individual, rerank_batch, evaluate
+from gemini import enhance_spelling, enhance_rewrite, enhance_expand, rerank_individual, rerank_batch, evaluate
 from lib.hybrid_search import normalize, HybridSearch
 
 def normalize_command(scores: list):
@@ -132,11 +132,14 @@ def main() -> None:
                 n += 1
             
             if args.evaluate:
+                print()
                 print("AI Evaluation:")
-                eval = evaluate(query, [m[1]['title']+":"+m[1]['document'] for m in movies])
+                # eval = evaluate(query, [m[1]['title']+": "+m[1]['document'] for m in movies])
+                eval = evaluate(query, [m[1]['title'] for m in movies])
                 n = 1
                 for m in movies:
                     print(f"{n}. {m[1]['title']}: {eval[n-1]}/3")
+                    n += 1
 
         case _:
             parser.print_help() 
